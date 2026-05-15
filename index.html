@@ -1,1 +1,423 @@
-https://reclutamiento-de-nvb.github.io/deteccion-de-nvb/
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NVB AI Screening Tool</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0D0F14; --surface: #13161D; --surface2: #1A1E28;
+    --border: #252A38; --accent: #4F6EF7; --accent2: #7B8FF5;
+    --green: #2ECC8A; --amber: #F5A623; --red: #F25C5C;
+    --text: #E8EAF0; --text2: #8B92A8; --text3: #555D74;
+  }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  .app { max-width: 720px; margin: 0 auto; padding: 24px 16px; }
+  .header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .logo { width: 36px; height: 36px; border-radius: 8px; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; color: #fff; flex-shrink: 0; }
+  .header-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .header-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-left: auto; box-shadow: 0 0 8px var(--green); }
+  .section { margin-bottom: 20px; }
+  .section-label { font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+  select, .upload-area, textarea { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; transition: border-color .2s; }
+  select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  select { padding: 12px 14px; font-size: 14px; cursor: pointer; appearance: none; }
+  textarea { padding: 12px 14px; font-size: 13px; resize: vertical; min-height: 100px; line-height: 1.6; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tab { flex: 1; padding: 9px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; background: var(--surface); color: var(--text2); text-align: center; transition: all .2s; }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .upload-area { padding: 28px; text-align: center; cursor: pointer; border-style: dashed; transition: all .2s; }
+  .upload-area:hover { border-color: var(--accent); background: var(--surface2); }
+  .upload-area.has-file { border-style: solid; border-color: var(--green); }
+  .upload-icon { font-size: 28px; margin-bottom: 8px; }
+  .upload-text { font-size: 13px; color: var(--text2); }
+  .upload-text strong { color: var(--text); }
+  #fileInput { display: none; }
+  .analyze-btn { width: 100%; padding: 14px; font-size: 14px; font-weight: 600; background: var(--accent); color: #fff; border: none; border-radius: 10px; cursor: pointer; transition: all .2s; letter-spacing: .02em; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .analyze-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+  .analyze-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  .result { display: none; margin-top: 24px; animation: fadeIn .4s ease; }
+  .result.visible { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .score-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 14px; }
+  .score-header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .score-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; color: #fff; flex-shrink: 0; }
+  .score-name { font-size: 15px; font-weight: 600; color: var(--text); }
+  .score-pos { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .rec-badge { margin-left: auto; font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 20px; flex-shrink: 0; }
+  .rec-avanzar { background: rgba(46,204,138,.15); color: var(--green); border: 1px solid rgba(46,204,138,.3); }
+  .rec-pedir { background: rgba(245,166,35,.15); color: var(--amber); border: 1px solid rgba(245,166,35,.3); }
+  .rec-descartar { background: rgba(242,92,92,.15); color: var(--red); border: 1px solid rgba(242,92,92,.3); }
+  .score-metrics { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
+  .metric { background: var(--surface2); border-radius: 8px; padding: 12px; text-align: center; }
+  .metric-val { font-size: 22px; font-weight: 600; color: var(--text); font-family: 'DM Mono', monospace; }
+  .metric-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+  .bar-bg { background: var(--surface2); border-radius: 4px; height: 6px; }
+  .bar-fill { height: 6px; border-radius: 4px; background: var(--accent); transition: width .8s ease; }
+  .skill-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .skill-row:last-child { border-bottom: none; }
+  .skill-name { flex: 1; color: var(--text); font-weight: 500; }
+  .skill-detail { font-size: 12px; color: var(--text2); }
+  .skill-badge { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 10px; flex-shrink: 0; }
+  .sb-ok { background: rgba(46,204,138,.15); color: var(--green); }
+  .sb-warn { background: rgba(245,166,35,.15); color: var(--amber); }
+  .sb-no { background: rgba(242,92,92,.15); color: var(--red); }
+  .alert-row { display: flex; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text2); }
+  .alert-row:last-child { border-bottom: none; }
+  .q-row { font-size: 13px; padding: 9px 12px; background: var(--surface2); border-radius: 8px; margin-bottom: 6px; color: var(--text2); line-height: 1.5; }
+  .loading-state { text-align: center; padding: 40px 20px; }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 13px; color: var(--text2); }
+  .loading-step { font-size: 12px; color: var(--text3); margin-top: 6px; font-family: 'DM Mono', monospace; }
+  .error-msg { background: rgba(242,92,92,.1); border: 1px solid rgba(242,92,92,.3); border-radius: 10px; padding: 14px; font-size: 13px; color: var(--red); margin-top: 16px; }
+  .sheet-status { font-size: 11px; color: var(--text3); margin-top: 6px; font-family: 'DM Mono', monospace; }
+  .sheet-status.ok { color: var(--green); }
+  .sheet-status.err { color: var(--red); }
+  .confidence-bar { margin-top: 8px; }
+  .confidence-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="logo">NVB</div>
+    <div>
+      <div class="header-title">AI Screening Tool</div>
+      <div class="header-sub">Powered by Claude · NVB Innovation Business</div>
+    </div>
+    <div class="status-dot"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Posición a evaluar</div>
+    <select id="posicion">
+      <option value="">Cargando posiciones desde el Sheet...</option>
+    </select>
+    <div id="sheetStatus" class="sheet-status"></div>
+    <div id="customJD" style="margin-top:10px;display:none;">
+      <textarea id="jdText" placeholder="Pegá aquí el Job Description de la posición..." style="min-height:120px;"></textarea>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Perfil del candidato</div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('cv',this)">📄 CV en PDF</div>
+      <div class="tab" onclick="switchTab('linkedin',this)">💼 LinkedIn / Texto</div>
+    </div>
+    <div id="tab-cv">
+      <div class="upload-area" onclick="document.getElementById('fileInput').click()" id="uploadArea">
+        <div class="upload-icon">📎</div>
+        <div class="upload-text"><strong>Hacé clic para subir el CV</strong><br>PDF · máximo 10MB</div>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf,.txt" onchange="handleFile(this)">
+    </div>
+    <div id="tab-linkedin" style="display:none;">
+      <textarea id="linkedinText" placeholder="Pegá aquí el texto del perfil de LinkedIn o del CV en texto plano...&#10;&#10;Incluí: nombre, experiencia, skills, educación, certificaciones."></textarea>
+    </div>
+  </div>
+
+  <button class="analyze-btn" onclick="analizar()" id="analyzeBtn">
+    <span>⚡</span> Analizar candidato con Claude
+  </button>
+
+  <div id="loadingState" style="display:none;">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <div class="loading-text">Claude está analizando el perfil...</div>
+      <div class="loading-step" id="loadingStep">Leyendo CV y JD de la posición</div>
+    </div>
+  </div>
+
+  <div id="errorMsg" class="error-msg" style="display:none;"></div>
+
+  <div id="result" class="result">
+    <div class="score-card">
+      <div class="score-header">
+        <div class="score-avatar" id="resAvatar">--</div>
+        <div>
+          <div class="score-name" id="resNombre">—</div>
+          <div class="score-pos" id="resPosicion">—</div>
+        </div>
+        <div class="rec-badge" id="resBadge">—</div>
+      </div>
+      <div class="score-metrics">
+        <div class="metric"><div class="metric-val" id="resScore">—</div><div class="metric-label">Score</div></div>
+        <div class="metric"><div class="metric-val" id="resMatch">—</div><div class="metric-label">Skills match</div></div>
+        <div class="metric"><div class="metric-val" id="resConfianza">—</div><div class="metric-label">Confianza</div></div>
+      </div>
+      <div class="bar-bg"><div class="bar-fill" id="resBar" style="width:0%"></div></div>
+      <div class="confidence-bar">
+        <div class="confidence-label"><span>Nivel de confianza del análisis</span><span id="resConfianzaLabel">—</span></div>
+        <div class="bar-bg"><div class="bar-fill" id="resConfianzaBar" style="width:0%;background:#2ECC8A;"></div></div>
+      </div>
+    </div>
+    <div class="score-card">
+      <div class="section-label" style="margin-bottom:12px;">Skills detectados</div>
+      <div id="resSkills"></div>
+    </div>
+    <div class="score-card">
+      <div class="section-label" style="margin-bottom:12px;">Alertas</div>
+      <div id="resAlertas"></div>
+    </div>
+    <div class="score-card">
+      <div class="section-label" style="margin-bottom:12px;">Preguntas para la entrevista</div>
+      <div id="resPreguntas"></div>
+    </div>
+    <div class="score-card">
+      <div class="section-label" style="margin-bottom:10px;">Justificación del score</div>
+      <div id="resJustificacion" style="font-size:13px;color:var(--text2);line-height:1.7;"></div>
+    </div>
+    <button class="analyze-btn" onclick="resetForm()" style="margin-top:4px;background:var(--surface2);border:1px solid var(--border);">
+      ← Analizar otro candidato
+    </button>
+  </div>
+
+</div>
+
+<script>
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTenzW8S64e_VHPQz5JVBdrDa4BcglD_MgVeRKnOm6hMd7ValexYiAKumwXhJq7fez-FNylfGNNdUtO/pub?gid=0&single=true&output=csv';
+const ANTHROPIC_KEY = 'TU_API_KEY_AQUI';
+
+let currentTab = 'cv';
+let fileContent = '';
+let fileType = '';
+let posiciones = [];
+
+async function cargarPosiciones() {
+  const sel = document.getElementById('posicion');
+  const status = document.getElementById('sheetStatus');
+  try {
+    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(SHEET_URL)}`);
+    const data = await res.json();
+    const rows = data.contents.trim().split('\n').slice(1);
+    posiciones = rows.map(row => {
+      const cols = row.split(',');
+      return {
+        id: cols[0]?.trim().replace(/"/g,''),
+        nombre: cols[1]?.trim().replace(/"/g,''),
+        jd: cols.slice(2).join(',').trim().replace(/"/g,'')
+      };
+    }).filter(p => p.id && p.nombre);
+    sel.innerHTML = '<option value="">Seleccioná una posición activa...</option>';
+    posiciones.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id; opt.textContent = p.nombre; sel.appendChild(opt);
+    });
+    const customOpt = document.createElement('option');
+    customOpt.value = 'custom'; customOpt.textContent = '— Pegar JD manualmente —';
+    sel.appendChild(customOpt);
+    status.textContent = `✓ ${posiciones.length} posiciones cargadas desde el Sheet`;
+    status.className = 'sheet-status ok';
+  } catch(e) {
+    status.textContent = '✗ No se pudo conectar al Sheet. Usando posiciones de respaldo.';
+    status.className = 'sheet-status err';
+    cargarFallback();
+  }
+}
+
+function cargarFallback() {
+  const sel = document.getElementById('posicion');
+  const fallback = [
+    { id: '278', nombre: '278 - QA P2 JR-019034 (Solera)', jd: 'Software QA Engineer P2 SDET en Solera Mitikah CDMX. Requiere Selenium, Appium iOS/Android, Java o C#, Jenkins CI/CD, performance testing, APIs, cloud AWS/Azure, inglés avanzado, 3+ años.' },
+    { id: '279B', nombre: '279 B - QA P4 JR-019032 (Solera)', jd: 'Lead SDET QA P4 en Solera Mitikah CDMX. Requiere C# o Java, Selenium WebDriver, Appium iOS/Android, CI/CD Jenkins Docker Kubernetes, liderazgo técnico, inglés avanzado, 6+ años OOP.' },
+    { id: '503', nombre: '503 - Sr Java Developer', jd: 'Senior Java Developer. Requiere Java 8+, Spring Boot, microservicios, REST APIs, Docker, Kubernetes, CI/CD, Agile, inglés intermedio.' }
+  ];
+  posiciones = fallback;
+  sel.innerHTML = '<option value="">Seleccioná una posición activa...</option>';
+  fallback.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id; opt.textContent = p.nombre; sel.appendChild(opt);
+  });
+  const customOpt = document.createElement('option');
+  customOpt.value = 'custom'; customOpt.textContent = '— Pegar JD manualmente —';
+  sel.appendChild(customOpt);
+}
+
+document.getElementById('posicion').addEventListener('change', function() {
+  document.getElementById('customJD').style.display = this.value === 'custom' ? 'block' : 'none';
+});
+
+function switchTab(tab, el) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-cv').style.display = tab === 'cv' ? 'block' : 'none';
+  document.getElementById('tab-linkedin').style.display = tab === 'linkedin' ? 'block' : 'none';
+}
+
+function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const area = document.getElementById('uploadArea');
+  area.classList.add('has-file');
+  area.innerHTML = `<div class="upload-icon">✅</div><div class="upload-text"><strong>${file.name}</strong><br><span style="color:var(--text3);font-size:12px;">${(file.size/1024).toFixed(0)} KB · listo para analizar</span></div>`;
+  const reader = new FileReader();
+  reader.onload = e => { fileContent = e.target.result; fileType = file.type === 'application/pdf' ? 'pdf' : 'text'; };
+  if (file.type === 'application/pdf') reader.readAsDataURL(file);
+  else { reader.readAsText(file); fileType = 'text'; }
+}
+
+function getLoadingSteps() {
+  const steps = ['Leyendo perfil del candidato...','Cargando JD de la posición...','Cruzando skills contra requisitos...','Calculando score y confianza...','Generando preguntas de entrevista...'];
+  let i = 0;
+  return setInterval(() => { document.getElementById('loadingStep').textContent = steps[i++ % steps.length]; }, 1800);
+}
+
+async function analizar() {
+  const posId = document.getElementById('posicion').value;
+  if (!posId) { alert('Seleccioná una posición primero.'); return; }
+  let jd = '', posNombre = '';
+  if (posId === 'custom') {
+    jd = document.getElementById('jdText').value.trim();
+    posNombre = 'Posición personalizada';
+    if (!jd) { alert('Pegá el JD de la posición.'); return; }
+  } else {
+    const pos = posiciones.find(p => p.id === posId);
+    jd = pos?.jd || ''; posNombre = pos?.nombre || posId;
+  }
+  if (currentTab === 'cv' && !fileContent) { alert('Subí el CV del candidato.'); return; }
+  if (currentTab === 'linkedin' && !document.getElementById('linkedinText').value.trim()) { alert('Pegá el perfil del candidato.'); return; }
+
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('result').classList.remove('visible');
+  document.getElementById('errorMsg').style.display = 'none';
+  const timer = getLoadingSteps();
+
+  try {
+    let messages = [];
+    if (currentTab === 'cv' && fileType === 'pdf') {
+      const base64 = fileContent.split(',')[1];
+      messages = [{ role: 'user', content: [
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
+        { type: 'text', text: buildPrompt(jd, posNombre, 'CV adjunto en PDF') }
+      ]}];
+    } else {
+      const texto = currentTab === 'linkedin' ? document.getElementById('linkedinText').value.trim() : fileContent;
+      messages = [{ role: 'user', content: buildPrompt(jd, posNombre, texto) }];
+    }
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages })
+    });
+    clearInterval(timer);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'Error en la API');
+    const text = data.content.find(b => b.type === 'text')?.text || '';
+    renderResult(text, posNombre);
+  } catch(err) {
+    clearInterval(timer);
+    document.getElementById('errorMsg').style.display = 'block';
+    document.getElementById('errorMsg').textContent = 'Error: ' + err.message;
+  } finally {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('analyzeBtn').disabled = false;
+  }
+}
+
+function buildPrompt(jd, pos, candidato) {
+  return `Sos un experto en recruiting IT para NVB Innovation Business. Analizá este candidato para la posición "${pos}".
+
+JOB DESCRIPTION:
+${jd}
+
+PERFIL DEL CANDIDATO:
+${candidato}
+
+Respondé ÚNICAMENTE en este formato JSON exacto, sin texto adicional ni backticks:
+{
+  "nombre": "nombre completo del candidato",
+  "score": 8.5,
+  "match": "7/10",
+  "confianza": 85,
+  "recomendacion": "Avanzar",
+  "skills": [
+    {"nombre": "Java", "estado": "ok", "detalle": "6 años en proyectos enterprise"},
+    {"nombre": "Selenium", "estado": "warn", "detalle": "mencionado sin detalle"},
+    {"nombre": "Docker", "estado": "no", "detalle": "no figura en el perfil"}
+  ],
+  "alertas": [
+    {"tipo": "warn", "texto": "Cambió de trabajo 3 veces en 2 años"},
+    {"tipo": "ok", "texto": "Experiencia en fintech compatible con el cliente"}
+  ],
+  "preguntas": [
+    "¿Trabajaste con Kubernetes en producción?",
+    "¿Por qué estás buscando cambio actualmente?"
+  ],
+  "justificacion": "Perfil sólido en Java y testing automatizado con experiencia relevante."
+}
+REGLAS: recomendacion exactamente "Avanzar", "Pedir CV" o "Descartar". estado: "ok", "warn" o "no". tipo alerta: "ok", "warn" o "error". score del 1 al 10 con un decimal. confianza del 1 al 100. Entre 4 y 8 skills relevantes del JD.`;
+}
+
+function renderResult(text, posNombre) {
+  try {
+    const clean = text.replace(/```json|```/g, '').trim();
+    const d = JSON.parse(clean);
+    const initials = d.nombre.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
+    document.getElementById('resAvatar').textContent = initials || '??';
+    document.getElementById('resNombre').textContent = d.nombre;
+    document.getElementById('resPosicion').textContent = posNombre + ' · Analizado por Claude';
+    document.getElementById('resScore').textContent = d.score + '/10';
+    document.getElementById('resMatch').textContent = d.match;
+    document.getElementById('resConfianza').textContent = d.confianza + '%';
+    document.getElementById('resConfianzaLabel').textContent = d.confianza + '%';
+    const badge = document.getElementById('resBadge');
+    badge.textContent = d.recomendacion;
+    badge.className = 'rec-badge';
+    if (d.recomendacion === 'Avanzar') badge.classList.add('rec-avanzar');
+    else if (d.recomendacion === 'Pedir CV') badge.classList.add('rec-pedir');
+    else badge.classList.add('rec-descartar');
+    setTimeout(() => {
+      document.getElementById('resBar').style.width = (d.score * 10) + '%';
+      document.getElementById('resConfianzaBar').style.width = d.confianza + '%';
+    }, 100);
+    document.getElementById('resSkills').innerHTML = d.skills.map(s => `
+      <div class="skill-row">
+        <span>${s.estado==='ok'?'✅':s.estado==='warn'?'⚠️':'❌'}</span>
+        <span class="skill-name">${s.nombre}</span>
+        <span class="skill-detail">${s.detalle}</span>
+        <span class="skill-badge ${s.estado==='ok'?'sb-ok':s.estado==='warn'?'sb-warn':'sb-no'}">${s.estado==='ok'?'Confirmado':s.estado==='warn'?'Parcial':'Ausente'}</span>
+      </div>`).join('');
+    document.getElementById('resAlertas').innerHTML = d.alertas.map(a => `
+      <div class="alert-row">
+        <span>${a.tipo==='ok'?'✅':a.tipo==='warn'?'⚠️':'🚨'}</span>
+        <span>${a.texto}</span>
+      </div>`).join('');
+    document.getElementById('resPreguntas').innerHTML = d.preguntas.map(p => `<div class="q-row">💬 ${p}</div>`).join('');
+    document.getElementById('resJustificacion').textContent = d.justificacion;
+    document.getElementById('result').classList.add('visible');
+    document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch(e) {
+    document.getElementById('errorMsg').style.display = 'block';
+    document.getElementById('errorMsg').textContent = 'Error al procesar la respuesta. Intentá de nuevo.';
+  }
+}
+
+function resetForm() {
+  document.getElementById('result').classList.remove('visible');
+  document.getElementById('uploadArea').classList.remove('has-file');
+  document.getElementById('uploadArea').innerHTML = '<div class="upload-icon">📎</div><div class="upload-text"><strong>Hacé clic para subir el CV</strong><br>PDF · máximo 10MB</div>';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('linkedinText').value = '';
+  document.getElementById('posicion').value = '';
+  document.getElementById('errorMsg').style.display = 'none';
+  fileContent = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+cargarPosiciones();
+</script>
+</body>
+</html>
